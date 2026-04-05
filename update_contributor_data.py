@@ -14,8 +14,6 @@ import time
 import subprocess
 
 def main():
-    # Original dataset of repos
-    # TODO verify git is installed on machine before running
     clone_dataset()
     update_dataset()
     repos = clone_and_pull_repos()
@@ -23,6 +21,7 @@ def main():
     save_updated_dataset(repos_updated)
 
 # Clones the original dataset
+# TODO verify git is installed on machine before running
 def clone_dataset():
     print ('Cloning original dataset')
     clone_dataset_command = 'git clone https://huggingface.co/datasets/TylerHilbert/PyTorchConference2025_GithubRepos'
