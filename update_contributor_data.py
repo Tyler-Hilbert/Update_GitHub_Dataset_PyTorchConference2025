@@ -1,5 +1,6 @@
 # Updates the below fields for the dataset https://huggingface.co/datasets/TylerHilbert/PyTorchConference2025_GithubRepos
 #   contributors_all
+#   contributors_2026_q1
 #   contributors_2025
 #   contributors_2024
 #   contributors_2023
@@ -82,6 +83,7 @@ def get_repo_dir(repo):
 
 # Updates the following fields for `repos`:
 #   contributors_all
+#   contributors_2026_q1
 #   contributors_2025
 #   contributors_2024
 #   contributors_2023
@@ -92,30 +94,34 @@ def update_contributors(repos):
     for repo in repos:
         print (f'Updating {repo['repo_name']}')
         contributors_all = set()
+        contributors_2026_q1 = set()
         contributors_2025 = set()
         contributors_2024 = set()
         contributors_2023 = set()
 
         os.chdir(get_repo_dir(repo))
         result = subprocess.run(
-            ["git", "log", "--pretty=format:%ad|%an", "--date=format:%Y"], # Uses name as unique field
-            #["git", "log", "--pretty=format:%ad|%ae", "--date=format:%Y"], # Uses email as unique field
+            ["git", "log", "--pretty=format:%ad|%an", "--date=format:%Y-%m-%d"], # Uses name as unique field
+            #["git", "log", "--pretty=format:%ad|%ae", "--date=format:%Y-%m-%d"], # Uses email as unique field
             capture_output=True,
             encoding='utf-8',
             errors='replace'
         )
         for line in result.stdout.strip().split('\n'):
-            year, name = line.split('|', 1)
+            date_str, name = line.split('|', 1)
             name = name.lower()
             contributors_all.add(name)
-            if '2025' in year:
+            if date_str.startswith(('2026-01', '2026-02', '2026-03')): # First quarter of 2026
+                contributors_2026_q1.add(name)
+            elif '2025' in date_str:
                 contributors_2025.add(name)
-            elif '2024' in year:
+            elif '2024' in date_str:
                 contributors_2024.add(name)
-            elif '2023' in year:
+            elif '2023' in date_str:
                 contributors_2023.add(name)
         
         repo['contributors_all'] = len(contributors_all)
+        repo['contributors_2026_q1'] = len(contributors_2026_q1)
         repo['contributors_2025'] = len(contributors_2025)
         repo['contributors_2024'] = len(contributors_2024)
         repo['contributors_2023'] = len(contributors_2023)
