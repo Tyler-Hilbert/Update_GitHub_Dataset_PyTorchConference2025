@@ -5,9 +5,9 @@
 #   contributors_2024
 #   contributors_2023
 # This script performs and clone and then overwrites the file PyTorchConference2025_GithubRepos.json
+# The script will reorder to sort by most contributors, toggled with `save_updated_dataset`.
 # The script does not push the update to HuggingFace.
 # The values are updated by cloning each `repo_link` and using a git log command.
-# The script does not change the order the repos are listed in the dataset.
 
 import os
 import json
@@ -19,7 +19,7 @@ def main():
     update_dataset()
     repos = clone_and_pull_repos()
     repos_updated = update_contributors(repos)
-    save_updated_dataset(repos_updated)
+    save_updated_dataset(repos_updated, True)
 
 # Clones the original dataset
 # TODO verify git is installed on machine before running
@@ -43,7 +43,7 @@ def update_dataset():
 
     print()
 
-# Does a git clone and git pull for each `repo_link` in dataset .json file
+# Runs `git clone` and `git pull`` for each `repo_link` in dataset .json file
 def clone_and_pull_repos():
     print ('Cloning repos')
     dataset_path = 'PyTorchConference2025_GithubRepos/PyTorchConference2025_GithubRepos.json'
@@ -92,7 +92,7 @@ def update_contributors(repos):
     print ('Updating contributors')
     root_dir = os.getcwd()
     for repo in repos:
-        print (f'Updating {repo['repo_name']}')
+        print (f'Updating {repo["repo_name"]}')
         contributors_all = set()
         contributors_2026_q1 = set()
         contributors_2025 = set()
@@ -108,7 +108,7 @@ def update_contributors(repos):
             errors='replace'
         )
         for line in result.stdout.strip().split('\n'):
-            date_str, name = line.split('|', 1)
+            date_str, name = line.split('|', 1) # TODO this may cause a crash if there are no commits
             name = name.lower()
             contributors_all.add(name)
             if date_str.startswith(('2026-01', '2026-02', '2026-03')): # First quarter of 2026
@@ -131,10 +131,13 @@ def update_contributors(repos):
     return repos
 
 # Saves the dataset with contributors updated back to the .json file
-def save_updated_dataset(repos):
+def save_updated_dataset(repos, sort_by_contributors):
     dataset_path = 'PyTorchConference2025_GithubRepos/PyTorchConference2025_GithubRepos.json'
     print(f'Saving updated dataset to {dataset_path}')
-    
+
+    if sort_by_contributors:
+        repos.sort(key=lambda r: r['contributors_all'], reverse=True)
+
     with open(dataset_path, 'w', encoding='utf-8') as file:
         json.dump(repos, file, indent=2, ensure_ascii=False)
     
