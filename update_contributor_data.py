@@ -1,12 +1,12 @@
-# Updates the below fields for the dataset https://huggingface.co/datasets/TylerHilbert/PyTorchConference2025_GithubRepos
+# This script updates the below values for the PyTorch GitHub Repos Dataset (https://huggingface.co/datasets/TylerHilbert/PyTorchConference2025_GithubRepos)
 #   contributors_all
 #   contributors_2026_q1
 #   contributors_2025
 #   contributors_2024
 #   contributors_2023
-# This script performs and clone and then overwrites the file PyTorchConference2025_GithubRepos.json
-# The script will reorder to sort by most contributors, toggled with `save_updated_dataset`.
-# The script does not push the update to HuggingFace.
+# This script clones and overwrites PyTorchConference2025_GithubRepos.json
+# Sorting by most contributors is toggled with `save_updated_dataset`.
+# This script does not push the update to HuggingFace.
 # The values are updated by cloning each `repo_link` and using a git log command.
 
 import os
@@ -16,12 +16,12 @@ import subprocess
 
 def main():
     clone_dataset()
-    update_dataset()
+    pull_dataset()
     repos = clone_and_pull_repos()
     repos_updated = update_contributors(repos)
     save_updated_dataset(repos_updated, True)
 
-# Clones the original dataset
+# Clones the dataset of GitHub repos (not each repo)
 # TODO verify git is installed on machine before running
 def clone_dataset():
     print ('Cloning original dataset')
@@ -30,8 +30,8 @@ def clone_dataset():
     os.system(clone_dataset_command)
     print()
 
-# Updates the original dataset
-def update_dataset():
+# Does a git pull to verify dataset is updated
+def pull_dataset():
     print ('Updating original dataset')
 
     root_dir = os.getcwd()
@@ -43,7 +43,7 @@ def update_dataset():
 
     print()
 
-# Runs `git clone` and `git pull`` for each `repo_link` in dataset .json file
+# Runs `git clone` and `git pull` for each `repo_link` in dataset .json file
 def clone_and_pull_repos():
     print ('Cloning repos')
     dataset_path = 'PyTorchConference2025_GithubRepos/PyTorchConference2025_GithubRepos.json'
