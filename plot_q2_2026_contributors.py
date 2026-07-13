@@ -1,10 +1,9 @@
-# Exports a .csv of the number of unique contributors in q2 of 2026 for each repo_link in https://huggingface.co/datasets/TylerHilbert/PyTorchConference2025_GithubRepos and https://huggingface.co/datasets/TylerHilbert/AI_Repos_Top100
-
 import os
 import time
 import subprocess
 from datasets import load_dataset
 import csv
+import matplotlib.pyplot as plt
 
 def main():
     print ("FIXME: YOU MUST DELETE ALL REPOS IN THIS DIR BEFORE RUNNING THE SCRIPT.")
@@ -12,7 +11,8 @@ def main():
 
     repo_links = load_repo_links()
     clone_and_pull_repos(repo_links)
-    export_q2_2026_contributors(repo_links)
+    q2_2026_num_contributors = get_q2_2026_contributors(repo_links)
+    plot_top_contributors(q2_2026_num_contributors)
 
 # Load list of repo links
 def load_repo_links():
@@ -70,9 +70,8 @@ def clone_and_pull_repos(repos_list):
     
     print()
 
-# Exports how many contributors there were in q2 of 2026 to a csv
 # TODO may have a bug for if '|' is in name
-def export_q2_2026_contributors(repos_list):
+def get_q2_2026_contributors(repos_list):
     print ('Iterating over repos list')
     q2_2026_num_contributors = {}
     root_dir = os.getcwd()
@@ -98,20 +97,58 @@ def export_q2_2026_contributors(repos_list):
         q2_2026_num_contributors[repo] = len(contributors_2026_q2)
         os.chdir(root_dir)
     print()
-
-    # Export contributor counts for each repo to .csv
-    q2_2026_filename = "q2_2026_contributors.csv"
-    print(f"Exporting q2 2026 contributor counts to {q2_2026_filename}")
-    with open(q2_2026_filename, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(["repo_link", "num_q2_2026_contributors"])
-        for repo, count in q2_2026_num_contributors.items():
-            writer.writerow([repo, count]) 
-    print()
+    return q2_2026_num_contributors
 
 # Returns unique name based on the url
 # TODO fix bug where repo with '__' in name could cause duplicate values
 def get_repo_dir(repo_link):
     return repo_link.split('https://github.com/')[1].replace('/', '__')
+
+# Generates a plot of the repos with the most contributors
+def plot_top_contributors(data_dict, top_n=5):
+    print(f"Generating LinkedIn-optimized chart for the top {top_n} repositories...")
+    
+    # Sort the dictionary by contributor count in descending order, grab top 5
+    sorted_data = sorted(data_dict.items(), key=lambda item: item[1], reverse=True)[:top_n]
+    
+    if not sorted_data:
+        print("Error: No data to plot!")
+        return
+
+    # Extract just the repo name (e.g., "hermes-agent") from the full URL
+    # We reverse ([::-1]) the lists so the #1 repo appears at the TOP of the horizontal chart
+    repos = [item[0].rstrip('/').split('/')[-1] for item in sorted_data][::-1]
+    counts = [item[1] for item in sorted_data][::-1]
+
+    # Set up the figure size for a 5:4 aspect ratio (10 wide, 8 high)
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    # Create the horizontal bar chart
+    bars = ax.barh(repos, counts, color='steelblue', edgecolor='black')
+    
+    # Add labels and title
+    ax.set_xlabel('# of GitHub Contributors', fontsize=14, fontweight='bold')
+    ax.set_ylabel('') # Explicitly leaving Y-axis label blank
+    ax.set_title('# of Contributors During Q2 2026 (Open-Source AI Repos)', fontsize=18, fontweight='bold', pad=20)
+    
+    # Print the exact number of contributors on the end of each bar
+    ax.bar_label(bars, padding=8, fontsize=14, fontweight='bold', color='black')
+    
+    # Clean up the axes a bit for a modern look
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.tick_params(axis='y', labelsize=14)
+    ax.tick_params(axis='x', labelsize=12)
+    
+    # Automatically adjust padding
+    plt.tight_layout() 
+    
+    # Save the figure with a high DPI so it looks crisp on LinkedIn mobile
+    filename = 'linkedin_q2_2026_contributors.png'
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+    print(f"Success! Graph saved as '{filename}'")
+    
+    # Display the graph in a popup window (optional)
+    plt.show()
 
 main()
